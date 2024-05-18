@@ -4,7 +4,10 @@ const  appError=require("../util/appError");
 const jwt=require("jsonwebtoken");
 const {promisify}=require("util");
 const sendEmail = require("../util/email")
-const cryptoRandomString = require("crypto-random-string")
+let cryptoRandomString;
+import('crypto-random-string').then((module) => {
+    cryptoRandomString = module.default;
+});
 
 //sign token.
 const signToken=(id)=>{
@@ -23,8 +26,6 @@ exports.signup=asyncHandler(async(req,res,next)=>{
         otp: cryptoRandomString({length: 6, type: "numeric"}),
         otpExpires: Date.now() + 10 * 60 * 1000
     });
-    // send welcome email..
-
     const data = {
         user: {name: newUser.name, email: newUser.email},
         otp: newUser.otp
@@ -52,6 +53,12 @@ exports.verifyToken = asyncHandler(async (req, res, next) => {
     user.otpExpires = undefined;
     user.emailVerified = true;
     await user.save({validateBeforeSave: false})
+    // send welcome email.
+    const data = {
+        user: {name: user.name, email: user.email},
+        supportEmail: 'support@destatouring.com'
+    }
+    await sendEmail({email: user.email, template: "welcome.ejs", data})
     res.status(200).json({
         status: "success",
         message: "Email verified successfully"
@@ -67,10 +74,16 @@ exports.login=asyncHandler(async(req,res,next)=>{
     if(!user || !(await user.correctPassword(password,user.password))){
         return next(new appError("Incorrect email or password",401));
     }
-    const token=signToken(user._id);
+    if (!user.emailVerified) {
+        return res.status(200).json({
+            status: "success",
+            message: "Logged in successfully, but your email is not verified. Please verify your email.",
+            token: signToken(user._id),
+        });
+    }
     res.status(200).json({
         status:"success",
-        token
+        token: signToken(user._id)
     });
 
 
@@ -121,23 +134,36 @@ exports.restrcitedTo = function (...roles) {
 };
 //forgot password.
 exports.forgotPassword=asyncHandler(async(req,res,next)=>{
-    // 1/ find user by email.
+    // 1. Get user based on POSTed email
     const user=await User.findOne({email:req.body.email});
-    // 2. if user does not exist, return an error.
     if(!user){
         return next(new appError("There is no user with email address",404));
     }
-    // 3. generate the random reset token.
+    // 2. generate the random reset token.
     const resetToken=user.createPasswordResetToken();
-    // 4. save the user data  and turn off validation before save.
     await user.save({validateBeforeSave:false});
-
+    console.log("user", user)
+    // 3. Send it to user's email
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+    const data = {
+        user: {name: user.name, email: user.email},
+        resetURL,
+        supportEmail: 'support@destatouring.com'
+    }
+    try {
+        await sendEmail({email: user.email, template: "resetPassword.ejs", data});
+    } catch (err) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save({validateBeforeSave: false});
+        return next(new appError("There was an error sending the email. Try again later!", 500));
+    }
     res.status(200).json({
         status:"success",
         message:"Token sent to email!"
     });
 })
-//reset password.
+//reset password. TODO ---not tested from backend (tested after  integrated with  client side)
 exports.resetPassword=asyncHandler(async(req,res,next)=>{
     //1.get user based on token.
     const hashedToken=crypto.createHash("sha256").update(req.params.token).digest("hex");
@@ -164,18 +190,22 @@ exports.resetPassword=asyncHandler(async(req,res,next)=>{
 //update password.
 exports.updatePassword=asyncHandler(async(req,res,next)=>{
     const user=await User.findById(req.user.id).select("+password");
-    //check if posted current password is correct.
     if(!(await user.correctPassword(req.body.passwordCurrent,user.password))){
         return next(new appError("Your current password is wrong",401));
     }
     //if so, update password.
     user.password=req.body.password;
     user.passwordConfirm=req.body.passwordConfirm;
+    // check if the new password is the same as the old  one if os throw error.
+    if (req.body.password === req.body.passwordCurrent) {
+        return next(new appError("New password can't be the same as the old password", 400));
+    }
     await user.save();
     //.log user in, send JWT.
     const token=signToken(user._id);
     res.status(200).json({
         status:"success",
+        message: "Password updated successfully",
         token
     });
 });

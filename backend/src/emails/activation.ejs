@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #003366;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .content {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+        }
+    </style>
+    <title></title>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Welcome to Desta Touring </h1>
+    </div>
+    <div class="content">
+        <p>Dear <%= user.name %></p>
+        <p>
+            Thank you for registering with Desta Touring, where your adventure begins.
+        </p>
+        <p>
+        </p>
+        <p>
+            To complete your registration, please use the following OTP (One-Time
+            Password):
+        </p>
+        <p><strong> <%= otp %></strong></p>
+        <p>
+            If you didn't register on Desta Touring, please disregard this email.
+        </p>
+        <p>
+            If you have any questions or need assistance, please contact our support team.
+        </p>
+        <p>
+            Thank you for choosing Desta Touring. We're excited to help you explore the world.
+        </p>
+    </div>
+    <div class="footer">
+        <p>Best regards,</p>
+        <p>Desta Touring Team</p>
+    </div>
+</div>
+</body>
+</html>
