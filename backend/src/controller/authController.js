@@ -3,6 +3,8 @@ const asyncHandler=require("../util/asyncHandler");
 const  appError=require("../util/appError");
 const jwt=require("jsonwebtoken");
 const {promisify}=require("util");
+const sendEmail = require("../util/email")
+const cryptoRandomString = require("crypto-random-string")
 
 //sign token.
 const signToken=(id)=>{
@@ -17,8 +19,18 @@ exports.signup=asyncHandler(async(req,res,next)=>{
         name,
         email,
         password,
-        passwordConfirm
+        passwordConfirm,
+        otp: cryptoRandomString({length: 6, type: "numeric"}),
+        otpExpires: Date.now() + 10 * 60 * 1000
     });
+    // send welcome email..
+
+    const data = {
+        user: {name: newUser.name, email: newUser.email},
+        otp: newUser.otp
+
+    };
+    await sendEmail({email: newUser.email, template: "activation.ejs", data});
     const token=signToken(newUser._id);
     res.status(201).json({
         status:"success",
@@ -28,6 +40,22 @@ exports.signup=asyncHandler(async(req,res,next)=>{
         }
     });
 
+});
+// verify token.
+exports.verifyToken = asyncHandler(async (req, res, next) => {
+    const {otp} = req.body;
+    const user = await User.findOne({otp, otpExpires: {$gt: Date.now()}})
+    if (!user) {
+        return next(new appError("Invalid or expired OTP", 400))
+    }
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    user.emailVerified = true;
+    await user.save({validateBeforeSave: false})
+    res.status(200).json({
+        status: "success",
+        message: "Email verified successfully"
+    })
 })
 //login user.
 exports.login=asyncHandler(async(req,res,next)=>{

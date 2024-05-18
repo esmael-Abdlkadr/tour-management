@@ -32,6 +32,12 @@ const userSchema=new Schema({
             message:"Passwords are not the same!"
         }
     },
+    otp: String,
+    otpExpires: Date,
+    emailVerified: {
+        type: Boolean,
+        default: false
+    },
     passwordResetToken:String,
     passwordResetExpires:Date,
     active:{
