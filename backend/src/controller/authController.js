@@ -65,14 +65,17 @@ exports.verifyToken = asyncHandler(async (req, res, next) => {
     })
 })
 //login user.
-exports.login=asyncHandler(async(req,res,next)=>{
-    const{email,password}=req.body;
-    if(!email || ! password){
-        return next(new appError("Please provide email and password!",400));
+exports.login = asyncHandler(async (req, res, next) => {
+    const {email, password} = req.body;
+    if (!email || !password) {
+        return next(new appError("Please provide email and password!", 400));
     }
-     const user=await User.findOne({email}).select("+password");
-    if(!user || !(await user.correctPassword(password,user.password))){
-        return next(new appError("Incorrect email or password",401));
+    const user = await User.findOne({email}).select("+password +active");
+    if (!user || !(await user.correctPassword(password, user.password))) {
+        return next(new appError("Incorrect email or password", 401));
+    }
+    if (!user.active) {
+        return next(new appError("Your account is deactivated. Please reactivate your account to login", 401));
     }
     if (!user.emailVerified) {
         return res.status(200).json({
@@ -82,12 +85,10 @@ exports.login=asyncHandler(async(req,res,next)=>{
         });
     }
     res.status(200).json({
-        status:"success",
+        status: "success",
         token: signToken(user._id)
     });
-
-
-})
+});
 exports.protect = asyncHandler(async (req, res, next) => {
     // 1. Getting tokens and checking if it's there.
     let token;
@@ -209,7 +210,7 @@ exports.updatePassword=asyncHandler(async(req,res,next)=>{
         token
     });
 });
-//logout.
+// TODO--logout not  tested(will be test with client side integration)
 exports.logout=(req,res)=>{
     res.cookie("jwt","loggedout",{
         expires:new Date(Date.now()+10*1000),
@@ -226,13 +227,14 @@ exports.updateMe=asyncHandler(async(req,res,next)=>{
         return next(new appError("This route is not for password updates. Please use /updateMyPassword",400));
     }
     //2.update user document.
-    const filteredBody=filterObj(req.body,"name","email");
-    const updatedUser=await User.findByIdAndUpdate(req.user.id,filteredBody,{
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, req.body, {
         new:true,
         runValidators:true
     });
     res.status(200).json({
         status:"success",
+        message: "User updated successfully",
         data:{
             user:updatedUser
         }
@@ -246,3 +248,17 @@ exports.deleteMe=asyncHandler(async(req,res,next)=>{
         data:null
     });
 } );
+// reactivate-deleted account.(if  it is in lessthan 30 days).
+// Reactivate deleted account
+exports.reactivateAccount = asyncHandler(async (req, res, next) => {
+    const user = await User.findOne({email: req.body.email});
+    if (!user || user.active) {
+        return next(new appError("There is no inactive user with this email address", 404));
+    }
+    user.active = true;
+    await user.save({validateBeforeSave: false});
+    res.status(200).json({
+        status: "success",
+        message: "Account reactivated successfully"
+    });
+});

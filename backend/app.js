@@ -2,6 +2,8 @@ const express=require("express");
 const morgan=require("morgan");
 const rateLimit=require("express-rate-limit");
 const authRouter = require("./src/router/authRoute")
+const error = require("./src/middleware/error")
+
 const app=express();
  if(process.env.NODE_ENV==="development"){
     app.use(morgan("dev"));
@@ -15,5 +17,6 @@ app.use(express.json());
     });
 app.use("/api",limiter);
 app.use("/api/v1/auth", authRouter)
+app.use(error)
 
 module.exports=app;
