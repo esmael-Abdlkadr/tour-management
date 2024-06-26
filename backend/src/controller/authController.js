@@ -10,15 +10,6 @@ import("crypto-random-string").then((module) => {
   cryptoRandomString = module.default;
 });
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = require("twilio")(accountSid, authToken);
-
-// client.verify.v2
-//   .services("VAf613af4fbe6120725e49dafee7a458e7")
-//   .verifications.create({ to: "+251938958554", channel: "sms" })
-//   .then((verification) => console.log(verification.sid));
-
 //sign token.
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
