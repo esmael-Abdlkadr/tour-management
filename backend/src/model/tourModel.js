@@ -55,7 +55,7 @@ const tourSchema = new Schema(
       trim: true,
     },
     itinerary: {
-      type: [String], // Array of strings describing each part of the itinerary
+      type: [String],
       required: [true, "A tour must have an itinerary"],
     },
     locations: [
@@ -76,7 +76,7 @@ const tourSchema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 tourSchema.index({ location: "2dsphere" });
 const Tour = model("Tour", tourSchema);

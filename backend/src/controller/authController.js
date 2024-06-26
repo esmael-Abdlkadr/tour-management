@@ -4,10 +4,20 @@ const appError = require("../util/appError");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const sendEmail = require("../util/email");
+
 let cryptoRandomString;
 import("crypto-random-string").then((module) => {
   cryptoRandomString = module.default;
 });
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require("twilio")(accountSid, authToken);
+
+// client.verify.v2
+//   .services("VAf613af4fbe6120725e49dafee7a458e7")
+//   .verifications.create({ to: "+251938958554", channel: "sms" })
+//   .then((verification) => console.log(verification.sid));
 
 //sign token.
 const signToken = (id) => {
@@ -17,12 +27,13 @@ const signToken = (id) => {
 };
 //signup-user.
 exports.signup = asyncHandler(async (req, res, next) => {
-  const { name, email, password, passwordConfirm } = req.body;
+  const { name, email, password, passwordConfirm, role } = req.body;
   const newUser = await User.create({
     name,
     email,
     password,
     passwordConfirm,
+    role,
     otp: cryptoRandomString({ length: 6, type: "numeric" }),
     otpExpires: Date.now() + 10 * 60 * 1000,
   });
@@ -62,6 +73,32 @@ exports.verifyToken = asyncHandler(async (req, res, next) => {
     message: "Email verified successfully",
   });
 });
+// request new otp.
+exports.requestNewOtp = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new appError("there is no user with this email", 404));
+  }
+  // check if user otp is    till valid.
+  // if (user.otpExpires > Date.now()) {
+  //   return next(new appError("OTP is still valid", 400));
+  // }
+  // generate newq  otp.
+  user.otp = cryptoRandomString({ length: 6, type: "numeric" });
+  user.otpExpires = Date.now() + 10 * 60 * 1000;
+  await user.save({ validateBeforeSave: false });
+  // send otp to user.
+  const data = {
+    user: { name: user.name, email: user.email },
+    otp: user.otp,
+  };
+  await sendEmail({ email: user.email, template: "otpAgain.ejs", data });
+  res.status(200).json({
+    status: "sucess",
+    message: "new OTP has been sent to your email",
+  });
+});
 //login user.
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -76,8 +113,8 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(
       new appError(
         "Your account is deactivated. Please reactivate your account to login",
-        401,
-      ),
+        401
+      )
     );
   }
   if (!user.emailVerified) {
@@ -106,7 +143,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
   // // If no token is found, return an error.
   if (!token) {
     return next(
-      new appError("You are not logged in! Please log in to get access.", 401),
+      new appError("You are not logged in! Please log in to get access.", 401)
     );
   }
   // // Verify the token.
@@ -115,7 +152,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
-      new appError("The user belonging to this token  no longer exist.", 401),
+      new appError("The user belonging to this token  no longer exist.", 401)
     );
   }
   req.user = currentUser;
@@ -126,9 +163,8 @@ exports.protect = asyncHandler(async (req, res, next) => {
 exports.restrcitedTo = function (...roles) {
   return function (req, res, next) {
     if (!roles.includes(req.user.role)) {
-      //403==forbidden
       return next(
-        new appError("you don't have permission to do this operation", 403),
+        new appError("you don't have permission to do this operation", 403)
       );
     }
     next();
@@ -146,7 +182,9 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
   console.log("user", user);
   // 3. Send it to user's email
-  const resetURL = `${req.protocol}://${req.get("host")}/api/v1/auth/resetPassword/${resetToken}`;
+  const resetURL = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/auth/resetPassword/${resetToken}`;
   const data = {
     user: { name: user.name, email: user.email },
     resetURL,
@@ -161,8 +199,8 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     return next(
       new appError(
         "There was an error sending the email. Try again later!",
-        500,
-      ),
+        500
+      )
     );
   }
   res.status(200).json({
@@ -209,7 +247,7 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
   // check if the new password is the same as the old  one if os throw error.
   if (req.body.password === req.body.passwordCurrent) {
     return next(
-      new appError("New password can't be the same as the old password", 400),
+      new appError("New password can't be the same as the old password", 400)
     );
   }
   await user.save();
@@ -238,8 +276,8 @@ exports.updateMe = asyncHandler(async (req, res, next) => {
     return next(
       new appError(
         "This route is not for password updates. Please use /updateMyPassword",
-        400,
-      ),
+        400
+      )
     );
   }
   //2.update user document.
@@ -270,7 +308,7 @@ exports.reactivateAccount = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user || user.active) {
     return next(
-      new appError("There is no inactive user with this email address", 404),
+      new appError("There is no inactive user with this email address", 404)
     );
   }
   user.active = true;
