@@ -1,7 +1,8 @@
 const asyncHandler = require("../util/asyncHandler");
 const appError = require("../util/appError");
+const API_FEATURES = require("../util/API_Features");
 
-// create-one
+// create-one.
 exports.createOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const doc = await Model.create(req.body);
@@ -15,7 +16,15 @@ exports.createOne = (Model) =>
 // get-all
 exports.getAll = (Model) =>
   asyncHandler(async (req, res, next) => {
-    const doc = await Model.find();
+    let filter = {};
+    if (req.params.tourId) filter = { tour: req.params.tourId };
+    const features = new API_FEATURES(Model.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const doc = await features.query;
     res.status(200).json({
       status: "success",
       results: doc.length,
