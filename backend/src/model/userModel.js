@@ -15,6 +15,10 @@ const userSchema = new Schema({
     lowercase: true,
     validate: [validator.isEmail, "Please provide a valid email"],
   },
+  selectedTour: {
+    type: Schema.Types.ObjectId,
+    ref: "Tour",
+  },
   photo: String,
   password: {
     type: String,
