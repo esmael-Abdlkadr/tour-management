@@ -15,6 +15,7 @@ const tourSchema = new Schema(
     availability: {
       type: Number,
       required: [true, "A tour must have a  available spots"],
+      min: [0, "Availability must be above 0"],
     },
     startDate: {
       type: Date,
@@ -24,6 +25,13 @@ const tourSchema = new Schema(
       type: Date,
       required: [true, "A tour must have a end date"],
     },
+    selectedByUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     ratingsAverage: {
       type: Number,
       default: 4.5,
