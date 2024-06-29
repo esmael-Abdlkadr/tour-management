@@ -8,9 +8,11 @@ router.route("/requestNewOtp").post(authController.requestNewOtp);
 router.route("/forgotpassword").post(authController.forgotPassword);
 router.route("/resetpassword/:token").patch(authController.resetPassword);
 router.route("/reactivate-me").patch(authController.reactivateAccount);
+
 router.use(authController.protect);
 router.route("/update-password").patch(authController.updatePassword);
 router.route("/update-me").patch(authController.updateMe);
 router.route("/delete-me").patch(authController.deleteMe);
+router.route("/about-me").get(authController.myInfo);
 
 module.exports = router;

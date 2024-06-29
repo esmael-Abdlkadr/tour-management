@@ -294,7 +294,6 @@ exports.deleteMe = asyncHandler(async (req, res, next) => {
   });
 });
 // reactivate-deleted account.(if  it is in lessthan 30 days).
-// Reactivate deleted account
 exports.reactivateAccount = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user || user.active) {
@@ -307,5 +306,16 @@ exports.reactivateAccount = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Account reactivated successfully",
+  });
+});
+
+// my-info.
+exports.myInfo = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
   });
 });
