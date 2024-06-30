@@ -27,8 +27,20 @@ const tourSchema = new Schema(
     },
     selectedByUsers: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "User",
+        user: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+        bookedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        status: {
+          type: String,
+          enum: ["active", "canceled"],
+          default: "active",
+        },
+        canceledAt: Date,
       },
     ],
 
