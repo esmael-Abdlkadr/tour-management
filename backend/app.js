@@ -4,6 +4,7 @@ const rateLimit = require("express-rate-limit");
 const authRouter = require("./src/router/authRoute");
 const tourRouter = require("./src/router/tourRoute");
 const reviewRouter = require("./src/router/reviewRoute");
+const bookingRouter = require("./src/router/bookingRoute");
 const error = require("./src/middleware/error");
 
 const app = express();
@@ -19,6 +20,7 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/tours", tourRouter);
+app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use(error);
 
