@@ -3,11 +3,14 @@ const factory = require("./handlerFactory");
 const asyncHandler = require("../util/asyncHandler");
 const AppError = require("../util/appError");
 const sendEmail = require("../util/email");
+const Rating = require("../model/ratingModel");
 exports.getAllTours = factory.getAll(Tour);
 exports.getTour = factory.getOne(Tour);
 exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
+exports.deleteAllTours = factory.deleteAll(Tour);
 exports.createTour = factory.createOne(Tour);
+
 exports.BookTour = asyncHandler(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id);
   const user = req.user;
@@ -36,6 +39,7 @@ exports.BookTour = asyncHandler(async (req, res, next) => {
   tour.availability -= 1;
 
   await tour.save();
+
   // send  email.
   const data = {
     user: { name: user.name, email: user.email },
@@ -69,66 +73,4 @@ exports.myTours = asyncHandler(async (req, res, next) => {
     results: bookedTours.length,
     data: bookedTours,
   });
-});
-// booking cancellation.
-exports.cancelBooking = asyncHandler(async (req, res, next) => {
-  try {
-    const user = req.user;
-    const tour = await Tour.findById(req.params.id);
-    if (!tour) {
-      return next(new AppError("Tour not found"));
-    }
-
-    // find  booking for current user.
-    const bookingIndex = tour.selectedByUsers.findIndex(
-      (booking) => booking.user?.toString() === (req.user?._id.toString() || "")
-    );
-    // if booking not found.(findIndex returns -1 if element is not found)
-    if (!bookingIndex === -1) {
-      return next(new AppError("booking not found", 404));
-    }
-    const booking = tour.selectedByUsers[bookingIndex];
-    // calculate cancellation deadline.(2 days  after booking  day)
-    const cancellationDeadline = new Date(
-      booking.bookedAt.getTime() + 2 * 24 * 60 * 60 * 1000
-    );
-    // check if cancellation deadline is passed.
-    if (new Date() > cancellationDeadline) {
-      return next(new AppError("cancellation deadline has passed"));
-    }
-    if (bookingIndex !== -1) {
-      // First, update the booking's status and canceledAt before removing it
-      tour.selectedByUsers[bookingIndex].status = "canceled";
-      tour.selectedByUsers[bookingIndex].canceledAt = Date.now();
-    }
-    // remove booking  from tour.
-    tour.selectedByUsers.splice(bookingIndex, 1);
-    // update avaiaality of the tour,
-    tour.availability += 1;
-
-    await tour.save();
-    // send  email.
-    const data = {
-      user: { name: user.name, email: user.email },
-      tour: {
-        name: tour.name,
-        startDate: tour.startDate,
-        endDate: tour.endDate,
-        duration: tour.duration,
-        price: tour.price,
-      },
-      supportEmail: "support@destatouring.com",
-    };
-    await sendEmail({
-      email: user.email,
-      template: "canceleBooking.ejs",
-      data,
-    });
-    res.status(200).json({
-      status: "sucess",
-      message: "booking cancelled successfully",
-    });
-  } catch (err) {
-    console.log(err);
-  }
 });

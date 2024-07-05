@@ -25,24 +25,6 @@ const tourSchema = new Schema(
       type: Date,
       required: [true, "A tour must have a end date"],
     },
-    selectedByUsers: [
-      {
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
-        bookedAt: {
-          type: Date,
-          default: Date.now,
-        },
-        status: {
-          type: String,
-          enum: ["active", "canceled"],
-          default: "active",
-        },
-        canceledAt: Date,
-      },
-    ],
 
     ratingsAverage: {
       type: Number,
