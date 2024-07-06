@@ -75,30 +75,6 @@ ratingSchema.statics.calcAverageRatings = async function (tourId) {
     console.log("error while  calcuate average rating", err);
   }
 };
-// custome method to handle rating updates.
-ratingSchema.statics.updateRatingAndRecalc = async function (
-  ratingId,
-  updateData
-) {
-  console.log("updateRatingAndRecalc called with ratingId:", ratingId);
-  if (!ratingId || !updateData) {
-    console.log("Invalid ratingId or updateData");
-    return;
-  }
-  try {
-    const rating = await this.findByIdAndUpdate(ratingId, updateData, {
-      new: true,
-    });
-    if (!rating) {
-      console.log("No rating found or updated for ratingId:", ratingId);
-      return;
-    }
-    console.log("Updated rating:", rating);
-    await this.calcAverageRatings(rating.tour);
-  } catch (err) {
-    console.log("Error in updateRatingAndRecalc:", err);
-  }
-};
 // update average rating after save
 ratingSchema.post("save", function () {
   // this => points to the current review document

@@ -30,7 +30,7 @@ const bookingSchema = new Schema({
   },
 });
 bookingSchema.pre(/^find/, function (next) {
-  this.populate({ path: "tour", select: "name" });
+  this.populate({ path: "tour", select: "name -_id" });
   next();
 });
 const Booking = model("Booking", bookingSchema);

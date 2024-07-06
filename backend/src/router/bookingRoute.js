@@ -6,12 +6,17 @@ router.use(authController.protect);
 router
   .route("/")
 
-  .get(bookingController.getAllBookings)
-  .delete(bookingController.deleteAllBookings);
+  .get(authController.restrcitedTo("admin"), bookingController.getAllBookings)
+  .delete(
+    authController.restrcitedTo("admin"),
+    bookingController.deleteAllBookings
+  );
+router.route("/my-tour").get(bookingController.myTours);
 router
   .route("/:id")
   .post(bookingController.createBooking)
   .get(bookingController.getBooking)
   .patch(bookingController.cancelBooking)
   .delete(bookingController.deleteBooking);
+
 module.exports = router;

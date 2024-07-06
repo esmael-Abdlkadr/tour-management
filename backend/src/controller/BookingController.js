@@ -121,3 +121,17 @@ exports.cancelBooking = asyncHandler(async (req, res, next) => {
     console.log(err);
   }
 });
+
+// my-tours.
+exports.myTours = asyncHandler(async (req, res, next) => {
+  const user = req.user;
+  const bookings = await Booking.find({ user: user._id })
+    .select("-user")
+
+    .sort({ bookedAt: -1 });
+  res.status(200).json({
+    status: "success",
+    result: bookings.length,
+    data: bookings,
+  });
+});
