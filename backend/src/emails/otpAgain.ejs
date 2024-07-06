@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        padding: 0;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        background-color: #003366;
+        color: #ffffff;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #777;
+      }
+    </style>
+    <title></title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Resend OTP for Desta Touring</h1>
+      </div>
+      <div class="content">
+        <p>Dear <%= user.name %>,</p>
+        <p>
+          We noticed that your previous OTP has expired. To complete your
+          registration with Desta Touring, please use the new OTP provided
+          below:
+        </p>
+        <p><strong><%= otp %></strong></p>
+        <p>
+          If you did not request this OTP or if you have any concerns, please
+          disregard this email and contact our support team immediately.
+        </p>
+        <p>
+          Thank you for choosing Desta Touring. We look forward to helping you
+          explore the world.
+        </p>
+      </div>
+      <div class="footer">
+        <p>Best regards,</p>
+        <p>Desta Touring Team</p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        padding: 0;
+        margin: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #990000; /* Changed to a different color to reflect cancellation */
+        color: #ffffff;
+        text-align: center;
+        padding: 20px;
+      }
+      .content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Your Tour Booking Cancellation</h1>
+      </div>
+      <div class="content">
+        <p>Dear <%= user.name %>,</p>
+        <p>
+          We have processed your request to cancel your booking. Here are the
+          details of your canceled tour:
+        </p>
+        <ul>
+          <li>Tour Name: <%= tour.name %></li>
+          <li>Duration: <%= tour.duration %> days</li>
+          <li>Start Date: <%= tour.startDate.toDateString() %></li>
+          <li>Price: <%= tour.price %></li>
+        </ul>
+        <p>
+          If this was a mistake or if you have any questions, feel free to
+          contact us at <%= supportEmail %>.
+        </p>
+      </div>
+      <div class="footer">
+        <p>We hope to see you on another adventure soon,</p>
+        <p>The Desta Touring Team</p>
+      </div>
+    </div>
+  </body>
+</html>
