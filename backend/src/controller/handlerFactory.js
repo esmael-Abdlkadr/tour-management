@@ -59,21 +59,7 @@ exports.updateOne = (Model) =>
     }
     res.status(200).json({
       status: "success",
-      data: {
-        itinerary: [
-          {
-            day: {
-              type: String,
-              required: [true, "Day is required"],
-            },
-            description: {
-              type: String,
-              required: [true, "Description is required"],
-            },
-          },
-        ],
-        data: doc,
-      },
+      data: doc,
     });
   });
 // delete-one

@@ -27,7 +27,7 @@ exports.createBooking = asyncHandler(async (req, res, next) => {
   const hasBooked = await Booking.findOne({
     tour: tourId,
     user: userId,
-    status: { $in: ["pending", "confirmed"] },
+    status: { $in: ["confirmed"] },
   });
   if (hasBooked) {
     return next(

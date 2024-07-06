@@ -37,10 +37,11 @@ ratingSchema.index({ tour: 1, user: 1 }, { unique: true });
 ratingSchema.pre(/^find/, function (next) {
   this.populate({
     path: "user",
-    select: "name photo",
+    select: "name",
   });
   next();
 });
+
 // calculate average rating.
 ratingSchema.statics.calcAverageRatings = async function (tourId) {
   try {
@@ -59,24 +60,56 @@ ratingSchema.statics.calcAverageRatings = async function (tourId) {
       },
     ]);
     if (stats.length > 0) {
-      await this.model("Tour").findByIdAndUpdate(tourId, {
+      await Tour.findByIdAndUpdate(tourId, {
         ratingsQuantity: stats[0].nRating,
         ratingsAverage: stats[0].avgRating,
       });
     } else {
-      await this.model("Tour").findByIdAndUpdate(tourId, {
+      await Tour.findByIdAndUpdate(tourId, {
         ratingsQuantity: 0,
         // assume 4.5  is  default rating when there is no review.
-        ratingsAverage: 4.5,
+        ratingsAverage: 0,
       });
     }
   } catch (err) {
     console.log("error while  calcuate average rating", err);
   }
 };
+// custome method to handle rating updates.
+ratingSchema.statics.updateRatingAndRecalc = async function (
+  ratingId,
+  updateData
+) {
+  console.log("updateRatingAndRecalc called with ratingId:", ratingId);
+  if (!ratingId || !updateData) {
+    console.log("Invalid ratingId or updateData");
+    return;
+  }
+  try {
+    const rating = await this.findByIdAndUpdate(ratingId, updateData, {
+      new: true,
+    });
+    if (!rating) {
+      console.log("No rating found or updated for ratingId:", ratingId);
+      return;
+    }
+    console.log("Updated rating:", rating);
+    await this.calcAverageRatings(rating.tour);
+  } catch (err) {
+    console.log("Error in updateRatingAndRecalc:", err);
+  }
+};
 // update average rating after save
 ratingSchema.post("save", function () {
+  // this => points to the current review document
   this.constructor.calcAverageRatings(this.tour);
+});
+ratingSchema.post(/^findOneAnd/, async function (doc, next) {
+  // doc => points to the current review document
+  if (doc) {
+    await doc.constructor.calcAverageRatings(doc.tour);
+  }
+  next();
 });
 const Rating = model("Rating", ratingSchema);
 module.exports = Rating;
