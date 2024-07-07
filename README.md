@@ -96,7 +96,7 @@ Welcome to Desta Touring! This project is a comprehensive tour management system
 
 To get a local copy up and running, follow these steps.
 
-### Prerequisites
+### Prerequisite
 
 - Node.js
 - MongoDB
