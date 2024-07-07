@@ -5,6 +5,7 @@ const authRouter = require("./src/router/authRoute");
 const tourRouter = require("./src/router/tourRoute");
 const reviewRouter = require("./src/router/reviewRoute");
 const bookingRouter = require("./src/router/bookingRoute");
+const ActivityLogRouter = require("./src/router/activityLogRoutes");
 const error = require("./src/middleware/error");
 
 const app = express();
@@ -22,6 +23,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/activity-logs", ActivityLogRouter);
 app.use(error);
 
 module.exports = app;

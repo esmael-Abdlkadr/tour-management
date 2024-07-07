@@ -4,7 +4,7 @@ const appError = require("../util/appError");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const sendEmail = require("../util/email");
-
+const logActivity = require("../util/logActivity");
 let cryptoRandomString;
 import("crypto-random-string").then((module) => {
   cryptoRandomString = module.default;
@@ -34,6 +34,8 @@ exports.signup = asyncHandler(async (req, res, next) => {
   };
   await sendEmail({ email: newUser.email, template: "activation.ejs", data });
   const token = signToken(newUser._id);
+  // log use activity when user signup.
+  logActivity(newUser._id, `new user signup ${name}`);
   res.status(201).json({
     status: "success",
     token,
@@ -149,13 +151,12 @@ exports.protect = asyncHandler(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
-// we wrap the middleware  with, another  function ,since we want  to pass whole of  the registered man, and middlewares doesn't accept any arguments.
 
 exports.restrcitedTo = function (...roles) {
   return function (req, res, next) {
     if (!roles.includes(req.user.role)) {
       return next(
-        new appError("you don't have permission to do this operation", 403)
+        new appError("You do not have permission to perform this action", 403)
       );
     }
     next();
@@ -288,6 +289,8 @@ exports.updateMe = asyncHandler(async (req, res, next) => {
 //delete user.
 exports.deleteMe = asyncHandler(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
+  // log he activity.
+  logActivity(req.user._id, "user delete their account");
   res.status(204).json({
     status: "success",
     data: null,

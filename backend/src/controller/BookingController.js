@@ -4,6 +4,7 @@ const asyncHandler = require("../util/asyncHandler");
 const AppError = require("../util/appError");
 const sendEmail = require("../util/email");
 const factory = require("./handlerFactory");
+const logActivity = require("../util/logActivity");
 exports.getAllBookings = factory.getAll(Booking);
 exports.getBooking = factory.getOne(Booking);
 exports.updateBooking = factory.updateOne(Booking);
@@ -54,7 +55,8 @@ exports.createBooking = asyncHandler(async (req, res, next) => {
     .populate({ path: "tour", select: "name -_id" })
     .populate({ path: "user", select: "name email -_id" });
   await tour.save();
-
+  // log activity.
+  logActivity(userId, `created new booking for  tour: ${tourId}`);
   // send  email.
   const data = {
     user: { name: user.name, email: user.email },
@@ -96,6 +98,8 @@ exports.cancelBooking = asyncHandler(async (req, res, next) => {
     booking.status = "cancelled";
     // cancele booking.
     await booking.save();
+    // log activity.
+    logActivity(user?._id, `booking  is cancelled  for tour:${tourId}`);
     // send  email.
     const data = {
       user: { name: user.name, email: user.email },
